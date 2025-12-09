@@ -243,8 +243,8 @@ plt.errorbar(
     label=r'Mean Prediction $\pm 1$ SD' # Use LaTeX for SD symbol
 )
 plt.title('Foliar Calcium (%) \n PLSR Predicted vs. Observed Values \n (Bootstrap Averaged, k = 50)', fontsize=16)
-plt.xlabel('Observed K (%)', fontsize = 12)
-plt.ylabel('Mean Predicted K (%)', fontsize = 12)
+plt.xlabel('Observed Ca (%)', fontsize = 12)
+plt.ylabel('Mean Predicted Ca (%)', fontsize = 12)
 # plt.xlim(min_val - padding, max_val + padding)
 # plt.ylim(min_val - padding, max_val + padding)
 plt.legend()
