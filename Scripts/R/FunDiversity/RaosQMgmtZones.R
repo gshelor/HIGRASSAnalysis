@@ -14,7 +14,8 @@ TGPP_AOI <- read_sf(paste0(data_dir, "GIS_Files/TGPP/Northern_TGPP_2025.shp"))
 TGPP_QuadPts_FunBmass_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/ModelingData/TGPP2025BiomassFunTrait_Airborne.gpkg"))
 
 ### TGPP management treatment zones, updated as of Dec 8, 2025
-TGPP_2025MgmtZones_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/GPKG/TGPPMgmtZones.gpkg"))
+TGPP_2025MgmtZones_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/GPKG/TGPPMgmtZones.gpkg")) |>
+  mutate(last_fire = paste(burn_season, last_fire_year))
 TGPP_2025TSF_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/SHP/TGPP2025TSF.shp"))
 TGPP_2025BurnSeason_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/SHP/TGPP2025BurnSeason.shp"))
 TGPP_2025Herbicide_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/SHP/TGPP2025Herbicide.shp"))
@@ -55,10 +56,10 @@ head(TGPPBurnSeasonRaosQ)
 ### empty list to store Rao's Q values and different number of years since fire
 years_since_fire_list <- list()
 raosq_vals <- list()
-for (i in unique(TGPP_2025TSF_sf$years_sinc)){
+for (i in unique(TGPP_2025MgmtZones_sf$last_fire)){
   ### filtering TSF layer so I can crop the Rao's Q layer to only pixels within the polygons for a given number of years since fire
-  temp_TSF_sf <- TGPP_2025TSF_sf |>
-    filter(years_sinc == i)
+  temp_TSF_sf <- TGPP_2025MgmtZones_sf |>
+    filter(last_fire == i)
 
   ### cropping Rao's Q to the temp layer above
   temp_RaosQ_rast <- crop(RaosQOutlierMaskAOICrop_rast, temp_TSF_sf, mask = TRUE)
@@ -88,12 +89,14 @@ for (x in 2:length(raosq_vals)){
 TGPPRaosQTSFVals_df <- TGPPRaosQTSFVals_df |>
   drop_na()
 
-TGPPRaosQTSFVals_df$tsf_factor <- as.factor(TGPPRaosQTSFVals_df$years_since_fire)
+TGPPRaosQTSFVals_df$last_fire_factor <- as.factor(TGPPRaosQTSFVals_df$years_since_fire)
 
-RaosQ_violinplot <- ggplot(TGPPRaosQTSFVals_df, aes(x = tsf_factor, y = raos_q, fill = tsf_factor)) +
+RaosQ_violinplot <- ggplot(TGPPRaosQTSFVals_df, aes(x = last_fire_factor, y = raos_q, fill = last_fire_factor)) +
   theme_bw() +
   geom_violin() +
-  geom_boxplot(width = 0.2, fill = "white") #+
+  scale_fill_brewer(palette = "Dark2") +
+  geom_boxplot(width = 0.15, fill = "white") +
+  scale_x_discrete(limits=c("Summer 2018", "Summer 2020", "Summer 2022", "Spring 2023", "Summer 2023", "Spring 2024", "Summer 2024", "Spring 2025"))
   # stat_summary(fun.data = mean_sdl, mult = 1, geom = "pointrange", color = "black")
 
 RaosQ_violinplot
