@@ -14,11 +14,11 @@ TGPP_AOI <- read_sf(paste0(data_dir, "GIS_Files/TGPP/Northern_TGPP_2025.shp"))
 TGPP_QuadPts_FunBmass_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/ModelingData/TGPP2025BiomassFunTrait_Airborne.gpkg"))
 
 ### TGPP management treatment zones, updated as of Dec 8, 2025
-TGPP_2025MgmtZones_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/GPKG/TGPPMgmtZones.gpkg")) |>
-  mutate(last_fire = paste(burn_season, last_fire_year))
-TGPP_2025TSF_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/SHP/TGPP2025TSF.shp"))
-TGPP_2025BurnSeason_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/SHP/TGPP2025BurnSeason.shp"))
-TGPP_2025Herbicide_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/SHP/TGPP2025Herbicide.shp"))
+TGPP_2025MgmtZones_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/TGPP_2025_Treatment_Updated/TGPP_2025_Treatment_Updated2025.shp")) #|>
+  # mutate(last_fire = paste(burn_season, last_fire_year))
+# TGPP_2025TSF_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/SHP/TGPP2025TSF.shp"))
+# TGPP_2025BurnSeason_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/SHP/TGPP2025BurnSeason.shp"))
+# TGPP_2025Herbicide_sf <- read_sf(paste0(data_dir, "GIS_Files/TGPP/MgmtZones/SHP/TGPP2025Herbicide.shp"))
 
 ### Rao's Q output
 RaosQMask_rast <- rast(paste0(data_dir, 'FunctionalDiversity/TGPP/TGPP2025RaoQ.tif'))
