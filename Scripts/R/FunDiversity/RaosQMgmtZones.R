@@ -40,26 +40,26 @@ plot(st_geometry(TGPP_2025MgmtZones_sf), add = TRUE)
 
 TGPPMgmtZonesRaosQ <- st_as_sf(terra::extract(RaosQOutlierMaskAOICrop_rast, TGPP_2025MgmtZones_sf, fun = "mean", bind = TRUE, na.rm = TRUE))
 
-TGPPBurnSeasonRaosQ <- st_as_sf(terra::extract(RaosQOutlierMaskAOICrop_rast, TGPP_2025BurnSeason_sf, fun = "mean", bind = TRUE, na.rm = TRUE))
+# TGPPBurnSeasonRaosQ <- st_as_sf(terra::extract(RaosQOutlierMaskAOICrop_rast, TGPP_2025BurnSeason_sf, fun = "mean", bind = TRUE, na.rm = TRUE))
 
-TGPPTSFRaosQ <- st_as_sf(terra::extract(RaosQOutlierMaskAOICrop_rast, TGPP_2025TSF_sf, fun = "mean", bind = TRUE, na.rm = TRUE))
+# TGPPTSFRaosQ <- st_as_sf(terra::extract(RaosQOutlierMaskAOICrop_rast, TGPP_2025TSF_sf, fun = "mean", bind = TRUE, na.rm = TRUE))
 
 plot(TGPPMgmtZonesRaosQ["lyr.1"])
-plot(TGPPBurnSeasonRaosQ["lyr.1"])
-plot(TGPP_2025TSF_sf["years_sinc"])
+# plot(TGPPBurnSeasonRaosQ["lyr.1"])
+# plot(TGPP_2025TSF_sf["years_sinc"])
 plot(TGPPTSFRaosQ["lyr.1"])
 head(TGPPMgmtZonesRaosQ)
-head(TGPPBurnSeasonRaosQ)
+# head(TGPPBurnSeasonRaosQ)
 
 
 ##### Extracting Values to look at variance of Rao's Q by time since fire #####
 ### empty list to store Rao's Q values and different number of years since fire
 years_since_fire_list <- list()
 raosq_vals <- list()
-for (i in unique(TGPP_2025MgmtZones_sf$last_fire)){
+for (i in unique(TGPP_2025MgmtZones_sf$Info)){
   ### filtering TSF layer so I can crop the Rao's Q layer to only pixels within the polygons for a given number of years since fire
   temp_TSF_sf <- TGPP_2025MgmtZones_sf |>
-    filter(last_fire == i)
+    filter(Info == i)
 
   ### cropping Rao's Q to the temp layer above
   temp_RaosQ_rast <- crop(RaosQOutlierMaskAOICrop_rast, temp_TSF_sf, mask = TRUE)
@@ -96,7 +96,22 @@ RaosQ_violinplot <- ggplot(TGPPRaosQTSFVals_df, aes(x = last_fire_factor, y = ra
   geom_violin() +
   scale_fill_brewer(palette = "Dark2") +
   geom_boxplot(width = 0.15, fill = "white") +
-  scale_x_discrete(limits=c("Summer 2018", "Summer 2020", "Summer 2022", "Spring 2023", "Summer 2023", "Spring 2024", "Summer 2024", "Spring 2025"))
+  scale_x_discrete(limits=c("Summer2018", "Spring2020", "Summer2020", "Spring2021", "Spring2022", "Spring2024", "Summer2024", "Spring2025"))
   # stat_summary(fun.data = mean_sdl, mult = 1, geom = "pointrange", color = "black")
 
+### printing violin plot
 RaosQ_violinplot
+
+
+##### Analysis of Variance (ANOVA) looking at most recent fire #####
+set.seed(802)
+MostRecentFire_ANOVA <- aov(raos_q ~ last_fire_factor, data = TGPPRaosQTSFVals_df)
+summary(MostRecentFire_ANOVA)
+# plot(MostRecentFire_ANOVA)
+
+
+### performing Tukey test to see which burn treatments are different from one another
+set.seed(802)
+MRF_Tukey <- TukeyHSD(MostRecentFire_ANOVA)
+MRF_Tukey
+plot(MRF_Tukey)
