@@ -1,4 +1,4 @@
-##### Functional Trait Model for Copper #####
+##### Functional Trait Model for Boron #####
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sbn
@@ -39,19 +39,19 @@ TGPP_FunBmass_Airborne_df = (
 ### reading in raster in chunks so it's hopefully less RAM intensive
 TGPPAirborne_2025_rast = rxr.open_rasterio(os.path.join(data_dir, "Tallgrass2025_Airborne/AirborneClean/TIFF/1768_TGGP_Subset_REF_Mosaic_001-015_CleanBands.tif"), chunks = {'band': 215, 'x': 1500, 'y': 1500})
 
-### splitting x (band reflectances) and y (Cuppm, variable being modeled)
-TGPP_Cuppm_x = TGPP_FunBmass_Airborne_df.select(pl.selectors.starts_with("band"))
-TGPP_Cuppm_y = TGPP_FunBmass_Airborne_df.select("Cu_ppm")
+### splitting x (band reflectances) and y (Bppm, variable being modeled)
+TGPP_Bppm_x = TGPP_FunBmass_Airborne_df.select(pl.selectors.starts_with("band"))
+TGPP_Bppm_y = TGPP_FunBmass_Airborne_df.select("B_ppm")
 
 ### separating x and y into respective training and testing datasets
 ## uncommented to test bayesian ridge
-# TGPP_Cuppm_trainx, TGPP_Cuppm_testx, TGPP_Cuppm_trainy, TGPP_Cuppm_testy = train_test_split(TGPP_Cuppm_x, TGPP_Cuppm_y, test_size = 0.3, random_state = 802)
+# TGPP_Bppm_trainx, TGPP_Bppm_testx, TGPP_Bppm_trainy, TGPP_Bppm_testy = train_test_split(TGPP_Bppm_x, TGPP_Bppm_y, test_size = 0.3, random_state = 802)
 # random.seed(802)
 # BR = BayesianRidge()
 # random.seed(802)
-# BRfit = poopypantsBR.fit(TGPP_Cuppm_trainx, TGPP_Cuppm_trainy)
+# BRfit = poopypantsBR.fit(TGPP_Bppm_trainx, TGPP_Bppm_trainy)
 
-# BRfit.score(TGPP_Cuppm_testx, TGPP_Cuppm_testy)
+# BRfit.score(TGPP_Bppm_testx, TGPP_Bppm_testy)
 
 ### setting up Leave Group Out Cross Validation (LGOCV)
 # Shuffle = ShuffleSplit(n_splits = 50, test_size = 0.3, random_state = 802)
@@ -75,23 +75,23 @@ for x in np.arange(1, 51):
     ### setting seed, initializing PLS model with some number of components (1 through length of for loop)
     random.seed(802)
     temp_pls = PLSRegression(n_components = x, scale = False)
-    # temp_cv = cross_validate(temp_pls, X = TGPP_Cuppm_trainx, y = TGPP_Cuppm_trainy, cv = Shuffle, scoring = PLS_metrics, return_train_score = True, return_estimator = True, return_indices = True, n_jobs = 10)
+    # temp_cv = cross_validate(temp_pls, X = TGPP_Bppm_trainx, y = TGPP_Bppm_trainy, cv = Shuffle, scoring = PLS_metrics, return_train_score = True, return_estimator = True, return_indices = True, n_jobs = 10)
     # temp_cv.keys()
     for i in np.arange(0, 50):
         ### separating x and y into respective training and testing datasets
         ## using the iteration of the for as the seed (adding it to 802 because that's my go-to seed, Vermont forever)
-        TGPP_Cuppm_trainx, TGPP_Cuppm_testx, TGPP_Cuppm_trainy, TGPP_Cuppm_testy = train_test_split(TGPP_Cuppm_x, TGPP_Cuppm_y, test_size = 0.3, random_state = 802 + i)
+        TGPP_Bppm_trainx, TGPP_Bppm_testx, TGPP_Bppm_trainy, TGPP_Bppm_testy = train_test_split(TGPP_Bppm_x, TGPP_Bppm_y, test_size = 0.3, random_state = 802 + i)
         ### fit model
         random.seed(802)
-        temp_pls_fit = temp_pls.fit(TGPP_Cuppm_trainx, TGPP_Cuppm_trainy)
+        temp_pls_fit = temp_pls.fit(TGPP_Bppm_trainx, TGPP_Bppm_trainy)
         ### predict on bootstrapped test set
         random.seed(802)
-        temp_preds = temp_pls.predict(TGPP_Cuppm_testx)
+        temp_preds = temp_pls.predict(TGPP_Bppm_testx)
         ### extracting relevant metrics (R2, RMSE)
         ## will be used to identify optimal number of components
-        temp_rmse = np.sqrt(mean_squared_error(TGPP_Cuppm_testy, temp_preds))
+        temp_rmse = np.sqrt(mean_squared_error(TGPP_Bppm_testy, temp_preds))
         boot_rmse_list.append(temp_rmse)
-        boot_R2_list.append(temp_pls_fit.score(TGPP_Cuppm_testx, TGPP_Cuppm_testy))
+        boot_R2_list.append(temp_pls_fit.score(TGPP_Bppm_testx, TGPP_Bppm_testy))
     ### storing average R^2 and test RMSE across bootstraps for each unique number of components
     # OptimalComps_list.append(boot_R2_list.index(max(boot_R2_list)) + 1)
     BootR2Avg_list.append(np.mean(boot_R2_list))
@@ -119,7 +119,7 @@ plt.xlabel("Number of Components")
 # plt.xlim(left = 0, right = 50)
 plt.xticks(np.arange(0, 51, 5))
 plt.ylabel("R-Squared")
-plt.title("Mean R-Squared Values for Each Number of Components \n Evaluated with PLSR of Copper Concentration \n (with 50 bootstraps)")
+plt.title("Mean R-Squared Values for Each Number of Components \n Evaluated with PLSR of Boron Concentration \n (with 50 bootstraps)")
 plt.close()
 
 ### plot of avg RMSE values for each number of components
@@ -128,15 +128,15 @@ plt.xlabel("Number of Components")
 # plt.xlim(left = 0, right = 50)
 plt.xticks(np.arange(0, 51, 5))
 plt.ylabel("RMSE")
-plt.title("Mean Test RMSE for Each Number of Components \n Evaluated with PLSR of Copper Concentration \n (with 50 bootstraps)")
+plt.title("Mean Test RMSE for Each Number of Components \n Evaluated with PLSR of Boron Concentration \n (with 50 bootstraps)")
 plt.close()
 
 
 ##### Fitting 50 bootstraps of final model #####
-### splitting x (band reflectances) and y (Cuppm, variable being modeled)
+### splitting x (band reflectances) and y (Bppm, variable being modeled)
 ## keeping quadrat number so I can use it to bind predictions from withheld sets to their corresponding points
-TGPP_Cuppm_x = TGPP_FunBmass_Airborne_df.select("Quadrat_name", pl.selectors.starts_with("band"))
-TGPP_Cuppm_y = TGPP_FunBmass_Airborne_df.select("Cu_ppm")
+TGPP_Bppm_x = TGPP_FunBmass_Airborne_df.select("Quadrat_name", pl.selectors.starts_with("band"))
+TGPP_Bppm_y = TGPP_FunBmass_Airborne_df.select("B_ppm")
 ### initializing PLSR model
 ### fitting PLSR with the optimal number of components based on R2 and RMSE from for loop above
 OptimalPLS = PLSRegression(n_components = optimal_comps, scale = False)
@@ -151,24 +151,24 @@ boot_rmse_list = []
 for i in np.arange(0, 50):
         ### separating x and y into respective training and testing datasets
         ## using the iteration of the for as the seed (adding it to 802 because that's my go-to seed, Vermont forever)
-        TGPP_Cuppm_trainx, TGPP_Cuppm_testx, TGPP_Cuppm_trainy, TGPP_Cuppm_testy = train_test_split(TGPP_Cuppm_x, TGPP_Cuppm_y, test_size = 0.3, random_state = 802 + i)
+        TGPP_Bppm_trainx, TGPP_Bppm_testx, TGPP_Bppm_trainy, TGPP_Bppm_testy = train_test_split(TGPP_Bppm_x, TGPP_Bppm_y, test_size = 0.3, random_state = 802 + i)
         ### removing Quadrat_name from train_x and storing it in a list
-        TestQuadrats.append(TGPP_Cuppm_testx['Quadrat_name'])
+        TestQuadrats.append(TGPP_Bppm_testx['Quadrat_name'])
         ### only keeping band reflectances for PLSR model
-        TGPP_Cuppm_trainx = TGPP_Cuppm_trainx.select(pl.selectors.starts_with("band"))
-        TGPP_Cuppm_testx = TGPP_Cuppm_testx.select(pl.selectors.starts_with("band"))
+        TGPP_Bppm_trainx = TGPP_Bppm_trainx.select(pl.selectors.starts_with("band"))
+        TGPP_Bppm_testx = TGPP_Bppm_testx.select(pl.selectors.starts_with("band"))
         ### fit model
         random.seed(802)
-        OptimalPLS_fit = OptimalPLS.fit(TGPP_Cuppm_trainx, TGPP_Cuppm_trainy)
+        OptimalPLS_fit = OptimalPLS.fit(TGPP_Bppm_trainx, TGPP_Bppm_trainy)
         ### predict on bootstrapped test set
         random.seed(802)
-        temp_preds = OptimalPLS_fit.predict(TGPP_Cuppm_testx)
+        temp_preds = OptimalPLS_fit.predict(TGPP_Bppm_testx)
         TestPreds.append(temp_preds)
         ### extracting relevant metrics (R2, RMSE)
         ## will be used to identify optimal number of components
-        temp_rmse = np.sqrt(mean_squared_error(TGPP_Cuppm_testy, temp_preds))
+        temp_rmse = np.sqrt(mean_squared_error(TGPP_Bppm_testy, temp_preds))
         boot_rmse_list.append(temp_rmse)
-        boot_R2_list.append(OptimalPLS_fit.score(TGPP_Cuppm_testx, TGPP_Cuppm_testy))
+        boot_R2_list.append(OptimalPLS_fit.score(TGPP_Bppm_testx, TGPP_Bppm_testy))
         ### storing coefficients
         OptimalPLSCoefs = OptimalPLS_fit.coef_[0]
         OptimalPLSIntercept = OptimalPLS_fit.intercept_
@@ -179,17 +179,17 @@ for i in np.arange(0, 50):
         # DaskClient = DaskCluster.get_client()
         # # print(DaskClient.dashboard_link)
         # ### multiplying bands by coefficient as a dask operation
-        # TGPP_Cuppm_array = (TGPPAirborne_2025_rast * OptimalPLSCoefs[:, None, None]
+        # TGPP_Bppm_array = (TGPPAirborne_2025_rast * OptimalPLSCoefs[:, None, None]
         #     ).sum(dim = "band") + OptimalPLSIntercept
         
         # ### Path to save the result
-        # output_file_path = os.path.join(data_dir, "FunctionalTraits/TGPP/Outputs/Rasters/Copper/", "TGPP2025Cuppm_Pred" + str(i) + ".tif")
+        # output_file_path = os.path.join(data_dir, "FunctionalTraits/TGPP/Outputs/Rasters/Boron/", "TGPP2025Bppm_Pred" + str(i) + ".tif")
         # ### Start time of function
         # # time.strftime("%H:%M:%S", time.localtime())
 
         # ### Calling .compute() or .rio.to_raster() triggers Dask to compute the result chunk-by-chunk.
         # ### This performs the entire PLSR coefficients*bands math without loading the full intermediate array.
-        # TGPP_Cuppm_array.rio.to_raster(output_file_path, dtype=np.float32)
+        # TGPP_Bppm_array.rio.to_raster(output_file_path, dtype=np.float32)
 
         # ### calling this in the hope that the time will print in the console when the above line finishes running
         # # time.strftime("%H:%M:%S", time.localtime())
@@ -231,14 +231,14 @@ TestPredAvg_df = (
 )
 
 ### joining df of validation set data made from bootstrapping with true values from original datset based on quadrat name
-TestPredAvg_df = TestPredAvg_df.join(TGPP_FunBmass_Airborne_df.select("Quadrat_name", "Cu_ppm"), on = "Quadrat_name")
+TestPredAvg_df = TestPredAvg_df.join(TGPP_FunBmass_Airborne_df.select("Quadrat_name", "B_ppm"), on = "Quadrat_name")
 
 ### plotting mean predictions with standard deviation error bars
 plt.style.use("seaborn-v0_8-colorblind")
 plt.figure(figsize=(10, 8))
 # Create the scatter plot using matplotlib's errorbar for precise control
 plt.errorbar(
-    x = TestPredAvg_df["Cu_ppm"],
+    x = TestPredAvg_df["B_ppm"],
     y = TestPredAvg_df["TestPredAvg"],
     # yerr represents the +/- error from the mean (here, 1 standard deviation)
     yerr=TestPredAvg_df["TestPredSD"], 
@@ -249,15 +249,15 @@ plt.errorbar(
     alpha=0.6,
     label=r'Mean Prediction $\pm 1$ SD' # Use LaTeX for SD symbol
 )
-plt.title('Foliar Copper (ppm) \n PLSR Predicted vs. Observed Values \n (Bootstrap Averaged, k = 50)', fontsize=16)
-plt.xlabel('Observed Cu (ppm)', fontsize = 12)
-plt.ylabel('Mean Predicted Cu (ppm)', fontsize = 12)
+plt.title('Foliar Boron (ppm) \n PLSR Predicted vs. Observed Values \n (Bootstrap Averaged, k = 50)', fontsize=16)
+plt.xlabel('Observed B (ppm)', fontsize = 12)
+plt.ylabel('Mean Predicted B (ppm)', fontsize = 12)
 # plt.xlim(min_val - padding, max_val + padding)
 # plt.ylim(min_val - padding, max_val + padding)
 plt.legend()
 # plt.tight_layout()
 # plt.show()
-plt.savefig("/home/gshelor/Documents/Schoolwork/OKSt/HIGRASS/Outputs/Figures/FunctionalTraits/TGPP/2025/PLSRConfidenceIntervals/CuppmSDPlot.png")
+plt.savefig("/home/gshelor/Documents/Schoolwork/OKSt/HIGRASS/Outputs/Figures/FunctionalTraits/TGPP/2025/PLSRConfidenceIntervals/BppmSDPlot.png")
 plt.close()
 
 ### measuring how long script takes to run
@@ -266,7 +266,7 @@ end = datetime.datetime.now()
 print(end - start)
 end - start
 ### reading in exported raster for plotting
-# TGPP_Cuppm_rast = rxr.open_rasterio(os.path.join(data_dir, "FunctionalTraits/TGPP/Outputs/Rasters/TGPP2025Cuppm.tif"))
+# TGPP_Bppm_rast = rxr.open_rasterio(os.path.join(data_dir, "FunctionalTraits/TGPP/Outputs/Rasters/TGPP2025Bppm.tif"))
 
 ### trying to plot it
-# ep.plot_bands(TGPP_Cuppm_rast, cmap = 'viridis')
+# ep.plot_bands(TGPP_Bppm_rast, cmap = 'viridis')
